@@ -5,7 +5,12 @@ const navItems = [
   { id: "history", label: "History", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
 ];
 
-export default function Sidebar({ current, onNavigate }) {
+const adminNavItems = [
+  { id: "users", label: "User Management", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+];
+
+export default function Sidebar({ current, onNavigate, user, onLogout }) {
+  const items = user && user.is_admin ? [...navItems, ...adminNavItems] : navItems;
   return (
     <nav className="sidebar">
       <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid #1e293b" }}>
@@ -13,10 +18,8 @@ export default function Sidebar({ current, onNavigate }) {
         <div style={{ fontSize: 11, color: "#64748b", marginTop: 2, textTransform: "uppercase", letterSpacing: "0.8px" }}>Pricing Coefficients</div>
       </div>
       <div style={{ padding: "12px 0", flex: 1 }}>
-        {navItems.map(item => (
-          <button
-            key={item.id}
-            onClick={() => onNavigate(item.id)}
+        {items.map(item => (
+          <button key={item.id} onClick={() => onNavigate(item.id)}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               width: "100%", padding: "10px 20px",
@@ -36,8 +39,19 @@ export default function Sidebar({ current, onNavigate }) {
           </button>
         ))}
       </div>
-      <div style={{ padding: "16px 20px", borderTop: "1px solid #1e293b", fontSize: 11, color: "#334155" }}>
-        CoeffManager v1.0
+      <div style={{ padding: "16px 20px", borderTop: "1px solid #1e293b" }}>
+        {user && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}>Signed in as</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "white", marginTop: 2 }}>{user.username}</div>
+            {user.is_admin && <div style={{ fontSize: 11, color: "#a78bfa", marginTop: 1 }}>Administrator</div>}
+          </div>
+        )}
+        <button onClick={onLogout}
+          style={{ display:"flex", alignItems:"center", gap:8, background:"transparent", border:"1px solid #334155", color:"#94a3b8", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, width:"100%", justifyContent:"center" }}>
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+          Logout
+        </button>
       </div>
     </nav>
   );

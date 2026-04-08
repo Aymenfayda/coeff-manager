@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
-const STATUS_COLORS = { ok:"#16a34a", calculated:"#2563eb", fallback:"#ea580c", unresolvable:"#dc2626" };
-
 export default function History({ showToast }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +34,7 @@ export default function History({ showToast }) {
               <thead><tr>
                 <th>Filename</th><th>Supplier</th><th>Family Col</th>
                 <th>Total</th><th>OK</th><th>Calculated</th><th>Fallback</th><th>Unresolvable</th>
-                <th>Processed At</th><th>Actions</th>
+                <th>Processed by</th><th>Processed At</th><th>Actions</th>
               </tr></thead>
               <tbody>
                 {rows.map(r => (
@@ -49,9 +47,10 @@ export default function History({ showToast }) {
                     <td style={{ color:"#2563eb", fontWeight:600 }}>{r.rows_calculated}</td>
                     <td style={{ color:"#ea580c", fontWeight:600 }}>{r.rows_fallback}</td>
                     <td style={{ color:"#dc2626", fontWeight:600 }}>{r.rows_unresolvable}</td>
+                    <td><span style={{ fontSize:12, fontWeight:500, color:"#6366f1", background:"#eef2ff", padding:"2px 8px", borderRadius:9999 }}>{r.processed_by || "admin"}</span></td>
                     <td style={{ fontSize:12, color:"#64748b" }}>{new Date(r.processed_at).toLocaleString()}</td>
-                    <td>
-                      <a className="btn btn-success" style={{ padding:"4px 10px", fontSize:12, marginRight:4 }} href={"http://localhost:3003/api/process/export/" + r.id} download>Export</a>
+                    <td style={{ whiteSpace:"nowrap" }}>
+                      <a className="btn btn-success" style={{ padding:"4px 10px", fontSize:12, marginRight:4 }} href={"/api/process/export/" + r.id} download>Export</a>
                       <button className="btn btn-danger" style={{ padding:"4px 10px", fontSize:12 }} onClick={() => del(r.id)}>Del</button>
                     </td>
                   </tr>

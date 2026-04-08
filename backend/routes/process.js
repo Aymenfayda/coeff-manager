@@ -105,17 +105,23 @@ router.post("/apply", async (req, res) => {
     const resultId = uuidv4();
     const rf = path.join(__dirname, "../../data/uploads", "result_"+resultId+".json");
     fs.writeFileSync(rf, JSON.stringify({ processed, headers, originalName, supplier, columnMap, stats }));
-    db.prepare("INSERT INTO processing_history (id,filename,supplier,family_column,total_rows,rows_ok,rows_calculated,rows_fallback,rows_unresolvable,result_file) VALUES (?,?,?,?,?,?,?,?,?,?)")
-      .run(resultId, originalName, supplier, columnMap.family||"", stats.total, stats.ok, stats.calculated, stats.fallback, stats.unresolvable, rf);
+    const processedBy = (req.user && req.user.username) || "admin";
+    const resultData = JSON.stringify({ processed, headers });
+    db.prepare("INSERT INTO processing_history (id,filename,supplier,family_column,total_rows,rows_ok,rows_calculated,rows_fallback,rows_unresolvable,result_file,processed_by,result_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
+      .run(resultId, originalName, supplier, columnMap.family||"", stats.total, stats.ok, stats.calculated, stats.fallback, stats.unresolvable, rf, processedBy, resultData);
     res.json({ resultId, stats, preview: processed.slice(0, 100), headers });
   } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 router.get("/export/:resultId", async (req, res) => {
   try {
-    const rf = path.join(__dirname, "../../data/uploads", "result_"+req.params.resultId+".json");
-    if (!fs.existsSync(rf)) return res.status(404).json({ error: "Result not found" });
-    const { processed, headers, originalName, supplier, stats } = JSON.parse(fs.readFileSync(rf, "utf8"));
+    const record = db.prepare("SELECT * FROM processing_history WHERE id=?").get(req.params.resultId);
+    if (!record) return res.status(404).json({ error: "Result not found" });
+    if (!record.result_data) return res.status(404).json({ error: "Result data not available (processed before persistent storage was added)" });
+    const { processed, headers } = JSON.parse(record.result_data);
+    const originalName = record.filename;
+    const supplier = record.supplier;
+    const stats = { total: record.total_rows, ok: record.rows_ok, calculated: record.rows_calculated, fallback: record.rows_fallback, unresolvable: record.rows_unresolvable };
     const wb = new ExcelJS.Workbook();
     const sheet = wb.addWorksheet("Processed Data");
     const extras = ["applied_coeff","calculated_price","calculated_cost","coeff_status"];

@@ -8,11 +8,11 @@ process.emit = function(name, data) {
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 3003;
 
-// Ensure data directories exist
 const dataDir = path.join(__dirname, "..", "data");
 const uploadsDir = path.join(dataDir, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -30,11 +30,15 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/coefficients", require("./routes/coefficients"));
-app.use("/api/process", require("./routes/process"));
-app.use("/api/history", require("./routes/history"));
-
+// Public routes (no auth)
 app.get("/api/health", (req, res) => res.json({ status: "ok", port: PORT }));
+app.use("/api/auth", require("./routes/auth"));
+
+// Protected routes
+app.use("/api/coefficients", auth, require("./routes/coefficients"));
+app.use("/api/process", auth, require("./routes/process"));
+app.use("/api/history", auth, require("./routes/history"));
+app.use("/api/users", auth, require("./routes/users"));
 
 // Serve built React frontend
 const publicDir = path.join(__dirname, "public");
@@ -47,13 +51,12 @@ if (fs.existsSync(publicDir)) {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("[31mUnhandled error:[0m", err.message);
+  console.error("[31mError:[0m", err.message);
   res.status(500).json({ error: err.message });
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("[36m[BACKEND][0m CoeffManager API running on [1mhttp://localhost:" + PORT + "[0m");
-  console.log("[36m[BACKEND][0m DB: " + require("path").join(__dirname, "..", "data", "coeff_manager.db"));
+  console.log("[36m[BACKEND][0m CoeffManager running on [1mhttp://localhost:" + PORT + "[0m");
 });
 
 process.on("uncaughtException", (e) => { console.error("Uncaught:", e.message); });
