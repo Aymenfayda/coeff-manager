@@ -1,28 +1,36 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
+const { query } = require("../db");
 
-router.get("/", (req, res) => {
-  const rows = db.prepare("SELECT * FROM processing_history ORDER BY processed_at DESC LIMIT 50").all();
-  res.json(rows);
+router.get("/", async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM processing_history ORDER BY processed_at DESC LIMIT 50");
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.delete("/:id", (req, res) => {
-  db.prepare("DELETE FROM processing_history WHERE id=?").run(req.params.id);
-  res.json({ success: true });
+router.delete("/:id", async (req, res) => {
+  try {
+    await query("DELETE FROM processing_history WHERE id=$1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get("/stats", (req, res) => {
-  const suppliers = db.prepare("SELECT COUNT(DISTINCT supplier) as count FROM coefficients").get();
-  const lastFile = db.prepare("SELECT filename, supplier, processed_at FROM processing_history ORDER BY processed_at DESC LIMIT 1").get();
-  const totalProcessed = db.prepare("SELECT COUNT(*) as count FROM processing_history").get();
-  const coeffCount = db.prepare("SELECT COUNT(*) as count FROM coefficients").get();
-  res.json({
-    supplierCount: suppliers.count,
-    lastFile: lastFile || null,
-    totalProcessed: totalProcessed.count,
-    coeffCount: coeffCount.count
-  });
+router.get("/stats", async (req, res) => {
+  try {
+    const [suppliers, lastFile, totalProcessed, coeffCount] = await Promise.all([
+      query("SELECT COUNT(DISTINCT supplier) AS count FROM coefficients"),
+      query("SELECT filename, supplier, processed_at FROM processing_history ORDER BY processed_at DESC LIMIT 1"),
+      query("SELECT COUNT(*) AS count FROM processing_history"),
+      query("SELECT COUNT(*) AS count FROM coefficients"),
+    ]);
+    res.json({
+      supplierCount: parseInt(suppliers[0].count, 10),
+      lastFile: lastFile[0] || null,
+      totalProcessed: parseInt(totalProcessed[0].count, 10),
+      coeffCount: parseInt(coeffCount[0].count, 10),
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;

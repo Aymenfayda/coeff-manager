@@ -5,46 +5,58 @@ const path = require("path");
 const fs = require("fs");
 const ExcelJS = require("exceljs");
 const Papa = require("papaparse");
-const db = require("../db");
+const { query } = require("../db");
 
 const upload = multer({ dest: path.join(__dirname, "../../data/uploads") });
 
-router.get("/", (req, res) => {
-  const rows = db.prepare("SELECT * FROM coefficients ORDER BY supplier, brand, family").all();
-  res.json(rows);
+router.get("/", async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM coefficients ORDER BY supplier, brand, family");
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.get("/suppliers", (req, res) => {
-  const rows = db.prepare("SELECT DISTINCT supplier FROM coefficients ORDER BY supplier").all();
-  res.json(rows.map(r => r.supplier));
+router.get("/suppliers", async (req, res) => {
+  try {
+    const rows = await query("SELECT DISTINCT supplier FROM coefficients ORDER BY supplier");
+    res.json(rows.map(r => r.supplier));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put("/:id", (req, res) => {
+router.post("/", async (req, res) => {
   const { supplier, brand, brand_coeff, family, family_coeff } = req.body;
   try {
-    db.prepare("UPDATE coefficients SET supplier=?, brand=?, brand_coeff=?, family=?, family_coeff=?, updated_at=CURRENT_TIMESTAMP WHERE id=?")
-      .run(supplier, brand || "", brand_coeff || null, family, family_coeff, req.params.id);
-    res.json({ success: true });
-  } catch(e) { res.status(400).json({ error: e.message }); }
-});
-
-router.delete("/all", (req, res) => {
-  db.prepare("DELETE FROM coefficients").run();
-  res.json({ success: true });
-});
-
-router.delete("/:id", (req, res) => {
-  db.prepare("DELETE FROM coefficients WHERE id=?").run(req.params.id);
-  res.json({ success: true });
-});
-
-router.post("/", (req, res) => {
-  const { supplier, brand, brand_coeff, family, family_coeff } = req.body;
-  try {
-    const result = db.prepare("INSERT INTO coefficients (supplier, brand, brand_coeff, family, family_coeff) VALUES (?, ?, ?, ?, ?)")
-      .run(supplier, brand || "", brand_coeff || null, family, family_coeff);
-    res.json({ id: result.lastInsertRowid, success: true });
+    const rows = await query(
+      "INSERT INTO coefficients (supplier, brand, brand_coeff, family, family_coeff) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [supplier, brand || "", brand_coeff || null, family, family_coeff]
+    );
+    res.json({ id: rows[0].id, success: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+router.put("/:id", async (req, res) => {
+  const { supplier, brand, brand_coeff, family, family_coeff } = req.body;
+  try {
+    await query(
+      "UPDATE coefficients SET supplier=$1, brand=$2, brand_coeff=$3, family=$4, family_coeff=$5, updated_at=CURRENT_TIMESTAMP WHERE id=$6",
+      [supplier, brand || "", brand_coeff || null, family, family_coeff, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+router.delete("/all", async (req, res) => {
+  try {
+    await query("DELETE FROM coefficients");
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    await query("DELETE FROM coefficients WHERE id=$1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.post("/import", upload.single("file"), async (req, res) => {
@@ -53,8 +65,7 @@ router.post("/import", upload.single("file"), async (req, res) => {
     const originalName = req.file.originalname.toLowerCase();
     let rows = [];
     if (originalName.endsWith(".csv")) {
-      const text = fs.readFileSync(filePath, "utf8");
-      rows = Papa.parse(text, { header: true, skipEmptyLines: true }).data;
+      rows = Papa.parse(fs.readFileSync(filePath, "utf8"), { header: true, skipEmptyLines: true }).data;
     } else {
       const wb = new ExcelJS.Workbook();
       await wb.xlsx.readFile(filePath);
@@ -73,7 +84,6 @@ router.post("/import", upload.single("file"), async (req, res) => {
       for (const k in obj) if (k) n[k.toLowerCase().trim().replace(/\s+/g, "_")] = obj[k];
       return n;
     };
-    const stmt = db.prepare("INSERT OR REPLACE INTO coefficients (supplier, brand, brand_coeff, family, family_coeff) VALUES (?, ?, ?, ?, ?)");
     let imported = 0;
     for (const row of rows) {
       const r = norm(row);
@@ -82,11 +92,23 @@ router.post("/import", upload.single("file"), async (req, res) => {
       const brand_coeff = parseFloat(r.brand_coeff || r.coeff_marque || r.coeff_brand) || null;
       const family = (r.family || r.famille || "").toString().trim();
       const family_coeff = parseFloat(r.family_coeff || r.coeff_famille || r.coeff_family) || null;
-      if (supplier && family && family_coeff) { stmt.run(supplier, brand, brand_coeff, family, family_coeff); imported++; }
+      if (supplier && family && family_coeff) {
+        await query(
+          `INSERT INTO coefficients (supplier, brand, brand_coeff, family, family_coeff)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (supplier, family) DO UPDATE SET
+             brand = EXCLUDED.brand,
+             brand_coeff = EXCLUDED.brand_coeff,
+             family_coeff = EXCLUDED.family_coeff,
+             updated_at = CURRENT_TIMESTAMP`,
+          [supplier, brand, brand_coeff, family, family_coeff]
+        );
+        imported++;
+      }
     }
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    const count = db.prepare("SELECT COUNT(*) as c FROM coefficients").get();
-    res.json({ success: true, imported, total: count.c });
+    const counts = await query("SELECT COUNT(*) AS c FROM coefficients");
+    res.json({ success: true, imported, total: parseInt(counts[0].c, 10) });
   } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 

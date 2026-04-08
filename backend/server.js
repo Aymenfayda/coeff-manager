@@ -9,6 +9,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const auth = require("./middleware/auth");
+const { init: initDb } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -24,8 +25,8 @@ app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
     const ms = Date.now() - start;
-    const color = res.statusCode >= 500 ? "[31m" : res.statusCode >= 400 ? "[33m" : "[32m";
-    console.log(`${color}${res.statusCode}[0m ${req.method} ${req.path} ${ms}ms`);
+    const color = res.statusCode >= 500 ? "\x1b[31m" : res.statusCode >= 400 ? "\x1b[33m" : "\x1b[32m";
+    console.log(`${color}${res.statusCode}\x1b[0m ${req.method} ${req.path} ${ms}ms`);
   });
   next();
 });
@@ -51,13 +52,20 @@ if (fs.existsSync(publicDir)) {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("[31mError:[0m", err.message);
+  console.error("\x1b[31mError:\x1b[0m", err.message);
   res.status(500).json({ error: err.message });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("[36m[BACKEND][0m CoeffManager running on [1mhttp://localhost:" + PORT + "[0m");
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`\x1b[36m[BACKEND]\x1b[0m CoeffManager running on \x1b[1mhttp://localhost:${PORT}\x1b[0m`);
+    });
+  })
+  .catch(e => {
+    console.error("\x1b[31m[DB] Initialization failed:\x1b[0m", e.message);
+    process.exit(1);
+  });
 
 process.on("uncaughtException", (e) => { console.error("Uncaught:", e.message); });
 process.on("unhandledRejection", (e) => { console.error("Unhandled rejection:", e?.message || e); });

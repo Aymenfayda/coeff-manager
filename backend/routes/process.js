@@ -6,7 +6,7 @@ const fs = require("fs");
 const ExcelJS = require("exceljs");
 const Papa = require("papaparse");
 const { v4: uuidv4 } = require("uuid");
-const db = require("../db");
+const { query } = require("../db");
 
 const upload = multer({ dest: path.join(__dirname, "../../data/uploads") });
 
@@ -71,7 +71,7 @@ router.post("/apply", async (req, res) => {
         allRows.push(obj);
       });
     }
-    const coeffRows = db.prepare("SELECT * FROM coefficients WHERE supplier=?").all(supplier);
+    const coeffRows = await query("SELECT * FROM coefficients WHERE supplier=$1", [supplier]);
     const familyMap = {};
     for (const c of coeffRows) { const fk = (c.family||"").toLowerCase().trim(); if (fk) familyMap[fk] = c.family_coeff; }
     const defRow = coeffRows.find(c => c.brand_coeff);
@@ -107,15 +107,18 @@ router.post("/apply", async (req, res) => {
     fs.writeFileSync(rf, JSON.stringify({ processed, headers, originalName, supplier, columnMap, stats }));
     const processedBy = (req.user && req.user.username) || "admin";
     const resultData = JSON.stringify({ processed, headers });
-    db.prepare("INSERT INTO processing_history (id,filename,supplier,family_column,total_rows,rows_ok,rows_calculated,rows_fallback,rows_unresolvable,result_file,processed_by,result_data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
-      .run(resultId, originalName, supplier, columnMap.family||"", stats.total, stats.ok, stats.calculated, stats.fallback, stats.unresolvable, rf, processedBy, resultData);
+    await query(
+      "INSERT INTO processing_history (id,filename,supplier,family_column,total_rows,rows_ok,rows_calculated,rows_fallback,rows_unresolvable,result_file,processed_by,result_data) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+      [resultId, originalName, supplier, columnMap.family||"", stats.total, stats.ok, stats.calculated, stats.fallback, stats.unresolvable, rf, processedBy, resultData]
+    );
     res.json({ resultId, stats, preview: processed.slice(0, 100), headers });
   } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }
 });
 
 router.get("/export/:resultId", async (req, res) => {
   try {
-    const record = db.prepare("SELECT * FROM processing_history WHERE id=?").get(req.params.resultId);
+    const rows = await query("SELECT * FROM processing_history WHERE id=$1", [req.params.resultId]);
+    const record = rows[0];
     if (!record) return res.status(404).json({ error: "Result not found" });
     if (!record.result_data) return res.status(404).json({ error: "Result data not available (processed before persistent storage was added)" });
     const { processed, headers } = JSON.parse(record.result_data);
