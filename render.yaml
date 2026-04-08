@@ -2,7 +2,7 @@ services:
   - type: web
     name: coeff-manager
     runtime: node
-    buildCommand: npm install && cd frontend && npm install && npm run build && cd ..
+    buildCommand: npm install && cd backend && npm install && cd ../frontend && npm install && npm run build && cd ..
     startCommand: node --max-old-space-size=512 backend/server.js
     envVars:
       - key: NODE_ENV
