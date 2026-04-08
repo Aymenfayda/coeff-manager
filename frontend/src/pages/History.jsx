@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
+async function triggerDownload(id, showToast) {
+  try { await api.download("/process/export/" + id); }
+  catch(e) { showToast(e.message, "error"); }
+}
+
 export default function History({ showToast }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +55,7 @@ export default function History({ showToast }) {
                     <td><span style={{ fontSize:12, fontWeight:500, color:"#6366f1", background:"#eef2ff", padding:"2px 8px", borderRadius:9999 }}>{r.processed_by || "admin"}</span></td>
                     <td style={{ fontSize:12, color:"#64748b" }}>{new Date(r.processed_at).toLocaleString()}</td>
                     <td style={{ whiteSpace:"nowrap" }}>
-                      <a className="btn btn-success" style={{ padding:"4px 10px", fontSize:12, marginRight:4 }} href={"/api/process/export/" + r.id} download>Export</a>
+                      <button className="btn btn-success" style={{ padding:"4px 10px", fontSize:12, marginRight:4 }} onClick={() => triggerDownload(r.id, showToast)}>Export</button>
                       <button className="btn btn-danger" style={{ padding:"4px 10px", fontSize:12 }} onClick={() => del(r.id)}>Del</button>
                     </td>
                   </tr>

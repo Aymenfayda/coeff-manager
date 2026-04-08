@@ -156,9 +156,12 @@ router.get("/export/:resultId", async (req, res) => {
     ss.addRow(["Fallback", stats.fallback]);
     ss.addRow(["Unresolvable", stats.unresolvable]);
     ss.columns = [{ width:30 }, { width:20 }];
-    const fname = "coeff_" + originalName.replace(/[.][^.]+$/, "") + "_" + Date.now() + ".xlsx";
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const safeName = originalName.replace(/[.][^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const safeSupplier = supplier.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const fname = safeSupplier + "_" + safeName + "_" + dateStr + ".xlsx";
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", "attachment; filename=" + fname);
+    res.setHeader("Content-Disposition", `attachment; filename="${fname}"`);
     await wb.xlsx.write(res);
     res.end();
   } catch (e) { console.error(e); res.status(500).json({ error: e.message }); }

@@ -50,6 +50,11 @@ export default function ProcessFile({ showToast }) {
 
   const reset = () => { setStep(1); setSessionData(null); setResult(null); setSupplier(""); setColumnMap({ family:"", sku:"", name:"", price:"", cost:"" }); };
 
+  const downloadResult = async () => {
+    try { await api.download("/process/export/" + result.resultId); }
+    catch(e) { showToast(e.message, "error"); }
+  };
+
   return (
     <div>
       <div style={{ marginBottom:24 }}>
@@ -160,7 +165,7 @@ export default function ProcessFile({ showToast }) {
             <div style={{ padding:"14px 16px", borderBottom:"1px solid #f1f5f9", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <h3 style={{ margin:0, fontSize:15, fontWeight:600 }}>Processed Rows Preview</h3>
               <div style={{ display:"flex", gap:8 }}>
-                <a className="btn btn-success" href={"http://localhost:3003/api/process/export/" + result.resultId} download>Export Excel</a>
+                <button className="btn btn-success" onClick={downloadResult}>Download Excel</button>
                 <button className="btn btn-secondary" onClick={reset}>Process Another File</button>
               </div>
             </div>

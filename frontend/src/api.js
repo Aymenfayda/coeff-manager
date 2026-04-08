@@ -46,5 +46,26 @@ export const api = {
     return fetch(BASE + path, { method: "POST", headers: authHeaders(), body: formData })
       .then(handleResponse).catch(networkError);
   },
-  exportUrl(path) { return BASE + path; },
+  async download(path) {
+    const r = await fetch(BASE + path, { headers: authHeaders() }).catch(networkError);
+    if (r.status === 401) { localStorage.removeItem("token"); window.location.reload(); throw new Error("Session expired"); }
+    if (!r.ok) {
+      let msg;
+      try { const j = await r.json(); msg = j.error || JSON.stringify(j); }
+      catch { msg = "HTTP " + r.status; }
+      throw new Error(msg);
+    }
+    const blob = await r.blob();
+    const disposition = r.headers.get("Content-Disposition") || "";
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const filename = match ? match[1] : "export.xlsx";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
