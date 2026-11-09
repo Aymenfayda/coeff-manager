@@ -1,0 +1,321 @@
+<title>Toi &amp; Moi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Pinyon+Script&family=Jost:wght@300;400;500&display=swap">
+<style>
+/* Layout: a love letter on blush paper — hero line from the Orly wall, a scattered polaroid journey, then the quotes and a signature. */
+:root {
+  --paper: #fbeef0;
+  --paper-2: #f6e0e4;
+  --ink: #4a0f1f;
+  --ink-soft: #7d4a57;
+  --wine: #9b1b30;
+  --gold: #b8892f;
+  --card: #fffafa;
+  --shadow: 0 10px 30px rgba(74, 15, 31, .16);
+  --display: "Bodoni Moda", "Didot", "Times New Roman", serif;
+  --script: "Pinyon Script", "Snell Roundhand", cursive;
+  --body: "Jost", "Futura", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1c0a10; --paper-2: #2a1018; --ink: #f7dfe4; --ink-soft: #c99aa6;
+    --wine: #ff6f86; --gold: #e2b866; --card: #f5ece9; --shadow: 0 12px 34px rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1c0a10; --paper-2: #2a1018; --ink: #f7dfe4; --ink-soft: #c99aa6;
+  --wine: #ff6f86; --gold: #e2b866; --card: #f5ece9; --shadow: 0 12px 34px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  background-image: radial-gradient(circle at 15% 0%, var(--paper-2), transparent 55%),
+                    radial-gradient(circle at 100% 60%, var(--paper-2), transparent 45%);
+  color: var(--ink);
+  font-family: var(--body);
+  font-weight: 300;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+
+/* ---------- Hero ---------- */
+.hero {
+  padding-block: clamp(56px, 10vw, 120px) clamp(40px, 6vw, 72px);
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  text-align: center;
+}
+.eyebrow {
+  font-size: .78rem; letter-spacing: .32em; text-transform: uppercase;
+  color: var(--gold); font-weight: 500;
+}
+.hero h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(4rem, 15vw, 9.5rem);
+  line-height: .9;
+  letter-spacing: -.02em;
+  color: var(--wine);
+  text-wrap: balance;
+}
+.hero h1 .amp { font-family: var(--script); font-style: normal; color: var(--gold); font-size: .8em; padding-inline: .05em; }
+.hero p { margin: 0; max-width: 34ch; color: var(--ink-soft); font-size: 1.1rem; text-wrap: balance; }
+.beat { display: inline-block; color: var(--wine); animation: beat 1.6s ease-in-out infinite; }
+@keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } }
+
+/* ---------- Section headings ---------- */
+.sec-head { display: grid; gap: 6px; justify-items: center; text-align: center; margin-bottom: clamp(28px, 5vw, 48px); }
+.sec-head h2 {
+  margin: 0; font-family: var(--display); font-weight: 400;
+  font-size: clamp(2rem, 5.5vw, 3.2rem); line-height: 1.1; text-wrap: balance;
+}
+.sec-head h2 em { color: var(--wine); }
+.sec-head span { font-family: var(--script); font-size: 1.7rem; color: var(--gold); line-height: 1; }
+
+/* ---------- Polaroid journey ---------- */
+.journey { padding-block: 24px 72px; }
+.chapter { margin-bottom: clamp(40px, 7vw, 72px); }
+.chapter-title {
+  display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px;
+  font-family: var(--display); font-style: italic; font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+}
+.chapter-title small { font-family: var(--body); font-style: normal; font-size: .72rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+.chapter-title::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: .18; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: clamp(22px, 4vw, 40px);
+  align-items: start;
+}
+.polaroid {
+  margin: 0;
+  background: var(--card);
+  padding: 12px 12px 0;
+  box-shadow: var(--shadow);
+  transform: rotate(var(--r, 0deg));
+  transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s;
+  position: relative;
+  min-width: 0;
+}
+.polaroid:hover, .polaroid:focus-within { transform: rotate(0deg) scale(1.03); z-index: 2; }
+.polaroid::before {
+  content: ""; position: absolute; top: -12px; left: 50%; width: 84px; height: 24px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: color-mix(in srgb, var(--gold) 35%, transparent);
+  border-left: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent);
+  border-right: 1px dashed color-mix(in srgb, var(--gold) 60%, transparent);
+}
+.polaroid img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; max-width: 100%; }
+.polaroid.wide img { aspect-ratio: 4 / 3; }
+.polaroid figcaption {
+  font-family: var(--script); color: #4a0f1f; font-size: 1.55rem; line-height: 1.15;
+  padding: 12px 4px 16px; text-align: center; min-height: 3.6em;
+  display: grid; place-items: center;
+}
+.board.duo .polaroid.wide { grid-column: span 2; }
+@media (max-width: 560px) { .board.duo .polaroid.wide { grid-column: auto; } }
+
+/* ---------- Featured quote ---------- */
+.featured {
+  padding-block: clamp(56px, 9vw, 96px);
+  text-align: center;
+  display: grid; gap: 22px; justify-items: center;
+  border-block: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.featured blockquote { margin: 0; max-width: 28ch; }
+.featured blockquote p {
+  margin: 0; font-family: var(--display); font-style: italic;
+  font-size: clamp(1.7rem, 4.6vw, 2.9rem); line-height: 1.2; text-wrap: balance;
+  transition: opacity .4s ease;
+}
+.featured cite { display: block; margin-top: 18px; font-style: normal; font-size: .8rem; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); font-weight: 500; }
+.featured .fade { opacity: 0; }
+.btn {
+  font: inherit; font-weight: 500; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--paper); background: var(--wine); border: 0; border-radius: 999px;
+  padding: 12px 24px; cursor: pointer; display: inline-flex; gap: 10px; align-items: center;
+  transition: transform .2s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* ---------- Quote list ---------- */
+.quotes { padding-block: clamp(56px, 9vw, 96px); }
+.quote-grid {
+  display: grid; gap: clamp(28px, 4vw, 44px) clamp(28px, 5vw, 56px);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.q { margin: 0; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.q::before { content: "\201C"; font-family: var(--display); font-size: 3.4rem; line-height: .6; color: var(--wine); height: .45em; }
+.q p { margin: 0; font-family: var(--display); font-size: 1.22rem; line-height: 1.45; }
+.q footer { font-size: .76rem; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* ---------- Letter ---------- */
+.letter { padding-block: clamp(40px, 7vw, 80px) clamp(72px, 10vw, 120px); display: grid; justify-items: center; }
+.letter-card {
+  max-width: 620px; width: 100%;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  padding: clamp(28px, 6vw, 56px);
+  display: grid; gap: 16px;
+}
+.letter-card h2 { margin: 0; font-family: var(--script); font-weight: 400; font-size: clamp(2.4rem, 7vw, 3.4rem); color: var(--wine); line-height: 1.1; }
+.letter-card p { margin: 0; max-width: 60ch; }
+.sign { font-family: var(--script); font-size: 2.2rem; color: var(--wine); justify-self: end; line-height: 1; margin-top: 8px; }
+
+/* ---------- Hearts ---------- */
+#hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+.heart { position: absolute; bottom: -40px; color: var(--wine); opacity: .0; animation: rise linear forwards; }
+@keyframes rise {
+  0% { transform: translateY(0) translateX(0) rotate(0); opacity: 0; }
+  10% { opacity: .75; }
+  100% { transform: translateY(-110vh) translateX(var(--dx)) rotate(var(--rot)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .beat, .heart { animation: none !important; }
+  .heart { display: none; }
+  .polaroid { transition: none; }
+}
+</style>
+
+<div id="hearts" aria-hidden="true"></div>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Paris · Milano · Paris</div>
+    <h1>Toi <span class="amp">&amp;</span> Moi</h1>
+    <p>Sur le mur d'Orly, il était écrit « Paris ne vous oubliera pas ». Moi non plus, je n'oublierai jamais un seul de ces moments avec toi <span class="beat">♥</span></p>
+  </header>
+
+  <section class="journey" aria-labelledby="journey-title">
+    <div class="sec-head">
+      <span>notre petite histoire</span>
+      <h2 id="journey-title">Chaque photo, <em>un battement de cœur</em></h2>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-title"><small>Le départ</small>Avant de s'envoler</div>
+      <div class="board">
+        <figure class="polaroid" style="--r:-3deg"><img src="photos/1.jpg" alt="Toi et moi à l'aéroport d'Orly, devant le mur « Paris ne vous oubliera pas »" loading="lazy"><figcaption>L'attente à Orly, ton bisou volé</figcaption></figure>
+        <figure class="polaroid" style="--r:2.5deg"><img src="photos/2.jpg" alt="Tu dors sur mon épaule dans l'avion" loading="lazy"><figcaption>Ton oreiller préféré : mon épaule</figcaption></figure>
+        <figure class="polaroid" style="--r:-1.5deg"><img src="photos/3.jpg" alt="Nous deux face à face, prêts à sortir" loading="lazy"><figcaption>Ce regard-là, je le garde</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-title"><small>Milano</small>La dolce vita à deux</div>
+      <div class="board duo">
+        <figure class="polaroid wide" style="--r:1.5deg"><img src="photos/4.jpg" alt="Tu m'embrasses sur la joue devant le Duomo de Milan" loading="lazy"><figcaption>Un bisou au pied du Duomo</figcaption></figure>
+        <figure class="polaroid" style="--r:-2.5deg"><img src="photos/6.jpg" alt="Toi avec une part de pizza dans une rue de Milan" loading="lazy"><figcaption>Ton plus beau sourire… pour la pizza</figcaption></figure>
+        <figure class="polaroid" style="--r:-1deg"><img src="photos/7.jpg" alt="Nous deux avec nos parts de pizza près de la Galleria" loading="lazy"><figcaption>Pizza al trancio, à deux</figcaption></figure>
+        <figure class="polaroid wide" style="--r:2deg"><img src="photos/5.jpg" alt="Toi qui me fais un bisou dans la Galleria Vittorio Emanuele II" loading="lazy"><figcaption>Galleria Vittorio Emanuele, sous la verrière</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="chapter">
+      <div class="chapter-title"><small>Paris</small>Notre quotidien, mon endroit préféré</div>
+      <div class="board">
+        <figure class="polaroid" style="--r:2deg"><img src="photos/8.jpg" alt="Nous deux qui nous faisons un bisou devant un miroir" loading="lazy"><figcaption>Bisou dans le miroir</figcaption></figure>
+        <figure class="polaroid" style="--r:-2.5deg"><img src="photos/9.jpg" alt="Toi dans une rue de Paris après la pluie" loading="lazy"><figcaption>Paris après la pluie, et toi</figcaption></figure>
+        <figure class="polaroid" style="--r:1deg"><img src="photos/10.jpg" alt="Nous deux en terrasse dans un café parisien" loading="lazy"><figcaption>Un café, une terrasse, « à partager »</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured" aria-live="polite">
+    <div class="eyebrow">Pour toi</div>
+    <blockquote id="fq">
+      <p id="fq-text">Aimer, ce n'est pas se regarder l'un l'autre, c'est regarder ensemble dans la même direction.</p>
+      <cite id="fq-author">Antoine de Saint-Exupéry</cite>
+    </blockquote>
+    <button class="btn" id="next-quote" type="button">Une autre citation <span aria-hidden="true">♥</span></button>
+  </section>
+
+  <section class="quotes" aria-labelledby="quotes-title">
+    <div class="sec-head">
+      <span>des mots plus grands que moi</span>
+      <h2 id="quotes-title">Ce qu'ils ont écrit, <em>je le ressens pour toi</em></h2>
+    </div>
+    <div class="quote-grid" id="quote-grid"></div>
+  </section>
+
+  <section class="letter">
+    <div class="letter-card">
+      <h2>Mon amour,</h2>
+      <p>De l'attente à Orly jusqu'aux terrasses de Paris, en passant par les pizzas de Milan, chaque endroit devient beau dès que tu y es.</p>
+      <p>Merci pour tes rires, tes bisous rouge à lèvres, ta tête qui s'endort sur mon épaule et tous les petits moments qu'on n'a même pas pris en photo.</p>
+      <p>J'ai hâte de remplir mille autres pages avec toi. La prochaine destination, c'est toi qui choisis.</p>
+      <p>Je t'aime.</p>
+      <div class="sign">Aymen ♥</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const QUOTES = [
+  ["Aimer, ce n'est pas se regarder l'un l'autre, c'est regarder ensemble dans la même direction.", "Antoine de Saint-Exupéry"],
+  ["Il n'y a qu'un bonheur dans la vie, c'est d'aimer et d'être aimé.", "George Sand"],
+  ["On ne voit bien qu'avec le cœur. L'essentiel est invisible pour les yeux.", "Antoine de Saint-Exupéry"],
+  ["Le cœur a ses raisons que la raison ne connaît point.", "Blaise Pascal"],
+  ["Parce que c'était lui, parce que c'était moi.", "Michel de Montaigne"],
+  ["Je t'aime pour toutes les femmes que je n'ai pas connues.", "Paul Éluard"],
+  ["La vie est une fleur dont l'amour est le miel.", "Victor Hugo"],
+  ["De quoi que soient faites nos âmes, la sienne et la mienne sont pareilles.", "Emily Brontë"],
+  ["Je t'aime, non seulement pour ce que tu es, mais pour ce que je suis quand je suis avec toi.", "Roy Croft"],
+];
+
+const grid = document.getElementById("quote-grid");
+QUOTES.slice(1).forEach(([t, a]) => {
+  const fig = document.createElement("figure");
+  fig.className = "q";
+  fig.innerHTML = `<p></p><footer></footer>`;
+  fig.querySelector("p").textContent = t;
+  fig.querySelector("footer").textContent = a;
+  grid.appendChild(fig);
+});
+
+let qi = 0;
+const fq = document.getElementById("fq");
+document.getElementById("next-quote").addEventListener("click", () => {
+  qi = (qi + 1) % QUOTES.length;
+  fq.classList.add("fade");
+  setTimeout(() => {
+    document.getElementById("fq-text").textContent = QUOTES[qi][0];
+    document.getElementById("fq-author").textContent = QUOTES[qi][1];
+    fq.classList.remove("fade");
+  }, 350);
+  burst(10);
+});
+
+const layer = document.getElementById("hearts");
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function heart() {
+  if (reduce) return;
+  const h = document.createElement("span");
+  h.className = "heart";
+  h.textContent = Math.random() < .8 ? "♥" : "♡";
+  h.style.left = Math.random() * 100 + "vw";
+  h.style.fontSize = (12 + Math.random() * 22) + "px";
+  h.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
+  h.style.setProperty("--rot", (Math.random() * 80 - 40) + "deg");
+  h.style.animationDuration = (7 + Math.random() * 6) + "s";
+  layer.appendChild(h);
+  h.addEventListener("animationend", () => h.remove());
+}
+function burst(n) { for (let i = 0; i < n; i++) setTimeout(heart, i * 90); }
+burst(14);
+setInterval(heart, 1400);
+</script>
